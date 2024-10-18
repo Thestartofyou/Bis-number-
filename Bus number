@@ -1,0 +1,53 @@
+import pandas as pd
+import qrcode
+
+# Initialize an empty DataFrame to store the permits
+columns = ['BiS Number', 'Permit Description', 'Date Issued', 'QR Code']
+permits_df = pd.DataFrame(columns=columns)
+
+# Function to add a permit to the system
+def add_permit(bis_number, description, date_issued):
+    global permits_df
+
+    # Generate a QR code for the BiS number
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(bis_number)
+    qr.make(fit=True)
+
+    # Save the QR code as an image file
+    qr_img = qr.make_image(fill='black', back_color='white')
+    qr_code_file = f"qrcodes/{bis_number}.png"
+    qr_img.save(qr_code_file)
+
+    # Add the permit information to the DataFrame
+    new_permit = {
+        'BiS Number': bis_number,
+        'Permit Description': description,
+        'Date Issued': date_issued,
+        'QR Code': qr_code_file
+    }
+    permits_df = permits_df.append(new_permit, ignore_index=True)
+
+# Function to search for a permit by BiS number
+def search_permit_by_bis(bis_number):
+    global permits_df
+    permit = permits_df[permits_df['BiS Number'] == bis_number]
+    if not permit.empty:
+        return permit
+    else:
+        return "Permit not found."
+
+# Example usage of the functions
+if __name__ == "__main__":
+    # Add sample permits
+    add_permit('BIS123456', 'Electrical work for building', '2024-10-15')
+    add_permit('BIS789012', 'Plumbing work for building', '2024-10-16')
+
+    # Search for a permit by BiS number
+    result = search_permit_by_bis('BIS123456')
+    print(result)
